@@ -1,3 +1,12 @@
+Crystal 2D
+-----------
+
+A small, super-easy-to-use game engine 2D made using Crystal and SDL.
+
+Example
+--------
+This renders "test.bmp" and moves it every frame, and closes upon receiving a close or a key press event:
+```
 require "sdl2"
 require "./sdlFix"
 require "./crystal2d"
@@ -23,3 +32,5 @@ class MyGame < SDLApp
 end
 
 MyGame.new.run
+```
+Note: "sdlFix.cr" is just a patch to the existing SDL2 library

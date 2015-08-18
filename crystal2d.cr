@@ -11,8 +11,8 @@ def not(bool)
 end
 class Sprite
 
-	def initialize(@renderer)
-		@tex = SDL2::Texture.new("pruebas.bmp", @renderer)
+	def initialize(path : String,@renderer)
+		@tex = SDL2::Texture.new(path, @renderer)
 		@size = SDL2::Rect.new(0, 0, @tex.w, @tex.h)
 		@x_bias = 0
 		@y_bias = 0
