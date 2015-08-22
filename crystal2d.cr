@@ -48,7 +48,8 @@ module Crystal2d
 	end
 
 	class Sprite
-		def initialize(path : String,layer = 0, app = $main_app)
+		property :is_visible
+		def initialize(path : String,layer = 0, app = $main_app,@is_visible = true )
 			@renderer = app.get_renderer
 			@tex = SDL2::Texture.new(path, @renderer)
 			@size = SDL2::Rect.new(0, 0, @tex.w, @tex.h)
@@ -66,7 +67,9 @@ module Crystal2d
 		end
 
 		def render
-			@renderer.copy(@tex,nil,@size)
+			if @is_visible
+				@renderer.copy(@tex,nil,@size)
+			end
 		end
 
 		def x

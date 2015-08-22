@@ -9,6 +9,7 @@ class MyGame < Crystal2d::SDLApp
 
 	def on_init
 		@spr = Crystal2d::Sprite.new("char_1_side.png",0)
+		@spr.is_visible = false
 	end
 
 	def on_game_frame(timestep)
