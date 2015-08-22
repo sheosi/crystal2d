@@ -1,6 +1,7 @@
 require "sdl2"
 require "./sdl2image"
 require "./sdlFix"
+
 struct Nil
 	macro method_missing(name,args,block)
 		SDL2.raise("Attempt to call {{name.id}} on Nil")
@@ -9,8 +10,11 @@ end
 def not(bool)
 	!bool
 end
-class Sprite
 
+module Crystal2d
+	extend self
+
+class Sprite
 	def initialize(path : String,@renderer)
 		@tex = SDL2::Texture.new(path, @renderer)
 		@size = SDL2::Rect.new(0, 0, @tex.w, @tex.h)
@@ -51,6 +55,92 @@ class Sprite
 			actual_y += 1
 		end
 		@size.y = actual_y
+	end
+end
+enum InputAction
+	OnOff
+	Toggle
+	Bind
+	SetAbsolute
+	SetRelative
+end
+    
+
+
+    #APP_TERMINATING
+    #APP_LOWMEMORY
+    #APP_WILLENTERBACKGROUND
+    #APP_DIDENTERBACKGROUND
+    #APP_WILLENTERFOREGROUND
+    #APP_DIDENTERFOREGROUND
+    #WINDOWEVENT    = 0x200
+    #SYSWMEVENT
+#
+    #KEYDOWN        = 0x300
+    #KEYUP
+    #TEXTEDITING
+    #TEXTINPUT
+#
+    #MOUSEMOTION    = 0x400
+    #MOUSEBUTTONDOWN
+    #MOUSEBUTTONUP
+    #MOUSEWHEEL
+#
+    #JOYAXISMOTION  = 0x600
+    #JOYBALLMOTION
+    #JOYHATMOTION
+    #JOYBUTTONDOWN
+    #JOYBUTTONUP
+    #JOYDEVICEADDED
+    #JOYDEVICEREMOVED
+#
+    #CONTROLLERAXISMOTION  = 0x650
+    #CONTROLLERBUTTONDOWN
+    #CONTROLLERBUTTONUP
+    #CONTROLLERDEVICEADDED
+    #CONTROLLERDEVICEREMOVED
+    #CONTROLLERDEVICEREMAPPED
+#
+    #FINGERDOWN      = 0x700
+    #FINGERUP
+    #FINGERMOTION
+#
+    #DOLLARGESTURE
+    #DOLLARRECORD
+    #MULTIGESTURE
+#
+    #CLIPBOARDUPDATE = 0x900
+#
+    #DROPFILE        = 0x1000
+#
+    #RENDER_TARGETS_RESET = 0x2000
+#
+    #USEREVENT    = 0x8000
+#
+    #LASTEVENT    = 0xFFFF
+private macro startWhen()
+	case event.type
+end
+private macro whenType(eventType,val)
+	when {{eventType}}
+		@var.value = {{val}}
+end
+class InputReg
+	def initiliaze(@type : InputAction,@var)
+	end
+	def input_action(event)
+		case @type
+		when OnOff
+			startWhen
+			when SDL2::EventType::KEYDOWN
+				@var.value = false
+			when SDL2::EventType::KEYUP
+				@var.value = true
+			when SDL2::EventType::FIRSTEVENT
+				@var.value = true
+			when SDL2
+			end
+		end
 	end
 end
 
@@ -124,8 +214,14 @@ class SDLApp
 		SDL2::Image.init(get_sdl_image_flags)
 		@main_renderer = SDL2::Renderer.new(@main_window,-1,get_renderer_flags)
 		@is_running = true
+		@__input_hash = {} of SDL2::Scancode | LibSDL2::Key | SDL2::EventType => Int32
 	end
-	@kill_lapse = 5
+	
+	def  self.signal(var,scancode, actionType)
+	#scancode : SDL2::Scancode
+	#keysym : LibSDL2::Key
+	end
+	
 	def run
 		on_init()
 		#For maximum correctnes frame time and step time are separated
@@ -196,3 +292,6 @@ class SDLApp
 	end
 	
 end
+end
+alias Crystal2D  = Crystal2d
+include Crystal2d
