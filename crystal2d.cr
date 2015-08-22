@@ -1,7 +1,7 @@
 require "sdl2"
 require "./sdl2image"
 require "./sdlFix"
-
+$main_app =nil
 struct Nil
 	macro method_missing(name,args,block)
 		SDL2.raise("Attempt to call {{name.id}} on Nil")
@@ -10,61 +10,110 @@ end
 def not(bool)
 	!bool
 end
-
+	 
 module Crystal2d
+	
+
 	extend self
 
-class Sprite
-	def initialize(path : String,@renderer)
-		@tex = SDL2::Texture.new(path, @renderer)
-		@size = SDL2::Rect.new(0, 0, @tex.w, @tex.h)
-		@x_bias = 0
-		@y_bias = 0
-	end
-	def render
-		@renderer.copy(@tex,nil,@size)
+		class Table(T)
+		def initialize()
+			@array = Array.new(1) { Array(T).new(0) }
+		end
+		def [](row : Int, column : Int)
+			@array[row][column]
+		end
+		def [](row : Int)
+			@array[row]
+		end
+		def []=(row : Int, column : Int,value : T)
+			@array[row][column] = value
+		end
+		def push(row : Int, value : T)
+			if row > @array.length() -1
+				(@array.length..row).each do |num|
+					@array.push(Array(T).new(0))
+				end
+			end
+			@array[row].push(value)
+		end
+		def each
+			@array.each do |row|
+				row.each do |cell|
+					yield cell
+				end
+			end
+		end
+	
 	end
 
-	def x
-		@size.x + @x_bias
-	end 
-	def x=(x)
-		@size.x = x
-	end
-	def x=(x : (Float32|Float64) )
-		actual_x = x.to_i32
-		@x_bias = @x_bias + (x-actual_x)
-		if @x_bias > 1.0
-			@x_bias -= 1.0
-			actual_x += 1
+	class Sprite
+		def initialize(path : String,layer = 0, app = $main_app)
+			@renderer = app.get_renderer
+			@tex = SDL2::Texture.new(path, @renderer)
+			@size = SDL2::Rect.new(0, 0, @tex.w, @tex.h)
+			@x_bias = 0
+			@y_bias = 0
+			app.add_sprite self
 		end
-		@size.x = actual_x
 
-	end
-	def y
-		@size.y + @y_bias
-	end
-	def y=(y)
-		@size.y = y
-	end
-	def y=(y : (Float32|Float64))
-		actual_y = y.to_i32
-		@y_bias = @y_bias + (y-actual_y)
-		if @y_bias > 1.0
-			@y_bias -= 1.0
-			actual_y += 1
+		def initialize(path : String,@renderer : SDL2::Renderer | LibSDL2::Renderer)
+			
+			@tex = SDL2::Texture.new(path, @renderer)
+			@size = SDL2::Rect.new(0, 0, @tex.w, @tex.h)
+			@x_bias = 0
+			@y_bias = 0
 		end
-		@size.y = actual_y
+
+		def render
+			@renderer.copy(@tex,nil,@size)
+		end
+
+		def x
+			@size.x + @x_bias
+		end 
+		def x=(x)
+			@size.x = x
+		end
+		def x=(x : (Float32|Float64) )
+			actual_x = x.to_i32
+			@x_bias = @x_bias + (x-actual_x)
+			if @x_bias > 1.0
+				@x_bias -= 1.0
+				actual_x += 1
+			end
+			@size.x = actual_x
+
+		end
+		def y
+			@size.y + @y_bias
+		end
+		def y=(y)
+			@size.y = y
+		end
+		def y=(y : (Float32|Float64))
+			actual_y = y.to_i32
+			@y_bias = @y_bias + (y-actual_y)
+			if @y_bias > 1.0
+				@y_bias -= 1.0
+				actual_y += 1
+			end
+			@size.y = actual_y
+		end
 	end
-end
-enum InputAction
-	OnOff
-	Toggle
-	Bind
-	SetAbsolute
-	SetRelative
-end
-    
+	enum InputAction
+		OnOff
+		Toggle
+		Bind
+		SetAbsolute
+		SetRelative
+	end
+	OnOff = InputAction::OnOff
+	Toggle = InputAction::Toggle
+	Bind = InputAction::Bind
+	SetAbsolute = InputAction::SetAbsolute
+	SetRelative = InputAction::SetRelative
+
 
 
     #APP_TERMINATING
@@ -75,17 +124,17 @@ end
     #APP_DIDENTERFOREGROUND
     #WINDOWEVENT    = 0x200
     #SYSWMEVENT
-#
+	
     #KEYDOWN        = 0x300
     #KEYUP
     #TEXTEDITING
     #TEXTINPUT
-#
+
     #MOUSEMOTION    = 0x400
     #MOUSEBUTTONDOWN
     #MOUSEBUTTONUP
     #MOUSEWHEEL
-#
+
     #JOYAXISMOTION  = 0x600
     #JOYBALLMOTION
     #JOYHATMOTION
@@ -93,56 +142,58 @@ end
     #JOYBUTTONUP
     #JOYDEVICEADDED
     #JOYDEVICEREMOVED
-#
+
     #CONTROLLERAXISMOTION  = 0x650
     #CONTROLLERBUTTONDOWN
     #CONTROLLERBUTTONUP
     #CONTROLLERDEVICEADDED
     #CONTROLLERDEVICEREMOVED
     #CONTROLLERDEVICEREMAPPED
-#
+
     #FINGERDOWN      = 0x700
     #FINGERUP
     #FINGERMOTION
-#
+
     #DOLLARGESTURE
     #DOLLARRECORD
     #MULTIGESTURE
-#
+
     #CLIPBOARDUPDATE = 0x900
-#
+
     #DROPFILE        = 0x1000
-#
+
     #RENDER_TARGETS_RESET = 0x2000
-#
+
     #USEREVENT    = 0x8000
-#
+
     #LASTEVENT    = 0xFFFF
-private macro startWhen()
-	case event.type
-end
-private macro whenType(eventType,val)
-	when {{eventType}}
-		@var.value = {{val}}
-end
-class InputReg
-	def initiliaze(@type : InputAction,@var)
+    #private macro startWhen()
+    	#case event.type
+    #end
+    private macro whenType(eventType,val)
+		when {{eventType}}
+			@var.value = {{val}}
+		
 	end
-	def input_action(event)
-		case @type
-		when OnOff
-			startWhen
-			when SDL2::EventType::KEYDOWN
-				@var.value = false
-			when SDL2::EventType::KEYUP
-				@var.value = true
-			when SDL2::EventType::FIRSTEVENT
-				@var.value = true
-			when SDL2
+	class InputReg
+		def initiliaze(@type : InputAction,@var)
+		end
+
+		def input_action(event)
+			case @type
+			when OnOff
+				case event.type
+				when SDL2::EventType::KEYDOWN
+					@var.value = false
+				when SDL2::EventType::KEYUP
+					@var.value = true
+				when SDL2::EventType::FIRSTEVENT
+					@var.value = true
+				end
 			end
 		end
 	end
-end
+
 
 class SDLApp
 	@limit_fps = true
@@ -174,6 +225,12 @@ class SDLApp
 	def get_window_title
 		@window_title
 	end
+	def get_renderer
+		@main_renderer
+	end
+	def get_window
+		@main_window
+	end
 	def get_renderer_flags
 		rflags = @renderer_flags
 		if @v_sync
@@ -198,32 +255,47 @@ class SDLApp
 		def {{name}}({{arg}})
 		end
 	end
+
 	###########
 	# Stub methods
 	###########
 	stub on_init
-	stub on_event
-	stub on_render
 	stub on_exit
 	stub on_game_frame,time_step
+	###########################
+	###########################
+	def on_event(event)
+		
+	end
+
+	def on_render
+		@__draw_table.each do |sprite|
+			sprite.render
+		end
+	end
 	##############
 
 	def initialize
 		SDL2.init(get_sdl_flags)
 		@main_window = SDL2::Window.new(get_window_title, get_window_width,get_window_height,get_window_flags)
 		SDL2::Image.init(get_sdl_image_flags)
-		@main_renderer = SDL2::Renderer.new(@main_window,-1,get_renderer_flags)
+		@main_renderer = SDL2::Renderer.new(get_window,-1,get_renderer_flags)
 		@is_running = true
-		@__input_hash = {} of SDL2::Scancode | LibSDL2::Key | SDL2::EventType => Int32
+		@__input_hash = {} of SDL2::Scancode | LibSDL2::Key | SDL2::EventType => InputReg
+		@__draw_table = Table(Sprite).new
+		$main_app = self
 	end
 	
-	def  self.signal(var,scancode, actionType)
-	#scancode : SDL2::Scancode
-	#keysym : LibSDL2::Key
+	macro signal(var,scancode, actionType)
+		#scancode : SDL2::Scancode
+		#keysym : LibSDL2::Key
 	end
-	
+
+	def add_sprite( spr : Sprite , layer = 0)
+		@__draw_table.push(layer,spr)
+	end
 	def run
-		on_init()
+	on_init()
 		#For maximum correctnes frame time and step time are separated
 		total_time_until_last_step = SDL2.ticks
 

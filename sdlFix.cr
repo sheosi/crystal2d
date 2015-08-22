@@ -21,7 +21,9 @@ class SDL2::Texture
 	def initialize(surf : SDL2::Surface, renderer : Pointer(LibSDL2::Renderer))
 		@texture = LibSDL2.create_texture_from_surface(renderer,surf.to_unsafe)		
 	end
-
+	#Just a method which accepts
+	def initiliaze(surf : Pointer(LibSDL::Surface) | SDL2::Surface |Nil, renderer : Pointer(LibSDL2::Renderer))
+	end
 	def free
 		LibSDL2.destroy_texture(@texture)
 	end
