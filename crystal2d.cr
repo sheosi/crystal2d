@@ -3,138 +3,61 @@ require "./sdl2image"
 require "./sdlFix"
 
 require "./crystal2d_input"
+require "./crystal2d_table"
+require "./crystal2d_sprite"
+#A global vairable to hold the default app (just there for convenience)
 $main_app =nil
+
+#A small fix
 struct Nil
 	macro method_missing(name,args,block)
 		SDL2.raise("Attempt to call {{name.id}} on Nil")
 	end
 end
+
+#
 def not(bool)
 	!bool
 end
-	 
+ 
 module Crystal2d
-	include Crystal2d_input
-	class Table(T)
-		def initialize()
-			@array = Array.new(1) { Array(T).new(0) }
-		end
-		def [](row : Int, column : Int)
-			@array[row][column]
-		end
-		def [](row : Int)
-			@array[row]
-		end
-		def []=(row : Int, column : Int,value : T)
-			@array[row][column] = value
-		end
-		def push(row : Int, value : T)
-			if row > @array.length() -1
-				(@array.length..row).each do |num|
-					@array.push(Array(T).new(0))
-				end
-			end
-			@array[row].push(value)
-		end
-		def each
-			@array.each do |row|
-				row.each do |cell|
-					yield cell
-				end
-			end
-		end
+
 	
-	end
-
-	class Sprite
-		property :is_visible
-		def initialize(path : String,layer = 0, app = $main_app,@is_visible = true )
-			@renderer = app.get_renderer
-			@tex = SDL2::Texture.new(path, @renderer)
-			@size = SDL2::Rect.new(0, 0, @tex.w, @tex.h)
-			@x_bias = 0
-			@y_bias = 0
-			app.add_sprite self
-		end
-
-		def initialize(path : String,@renderer : SDL2::Renderer | LibSDL2::Renderer)
-			
-			@tex = SDL2::Texture.new(path, @renderer)
-			@size = SDL2::Rect.new(0, 0, @tex.w, @tex.h)
-			@x_bias = 0
-			@y_bias = 0
-		end
-
-		def render
-			if @is_visible
-				@renderer.copy(@tex,nil,@size)
-			end
-		end
-
-		def x
-			@size.x + @x_bias
-		end 
-		def x=(x)
-			@size.x = x
-		end
-		def x=(x : (Float32|Float64) )
-			actual_x = x.to_i32
-			@x_bias = @x_bias + (x-actual_x)
-			if @x_bias > 1.0
-				@x_bias -= 1.0
-				actual_x += 1
-			end
-			@size.x = actual_x
-
-		end
-		def y
-			@size.y + @y_bias
-		end
-		def y=(y)
-			@size.y = y
-		end
-		def y=(y : (Float32|Float64))
-			actual_y = y.to_i32
-			@y_bias = @y_bias + (y-actual_y)
-			if @y_bias > 1.0
-				@y_bias -= 1.0
-				actual_y += 1
-			end
-			@size.y = actual_y
-		end
-	end
-
 class SDLApp
-	alias  InputTrigger = SDL2::Scancode | LibSDL2::Key | SDL2::EventType
-	@limit_fps = true
-	@max_fps = 60
+
+	#Flags
 	@sdl_flags = SDL2::INIT::VIDEO
+	@renderer_flags = SDL2::Renderer::Flags::ACCELERATED
+
+	#Window config
+	@window_flags = SDL2::Window::Flags::SHOWN
+	@window_title = "An SDL2 application"
 	@window_width = 640
 	@window_height = 480
-	@window_title = "An SDL2 application"
-	@window_flags = SDL2::Window::Flags::SHOWN
+	
+	#Video config
 	@v_sync = true
-	@renderer_flags = SDL2::Renderer::Flags::ACCELERATED
+	@limit_fps = true
+	@max_fps = 60
+
+	#Image codecs
 	@use_png  = true
 	@use_jpg  = true
 	@use_tif  = true
 	@use_webp = true
 
-	def get_sdl_flags
-		@sdl_flags
+	macro func_get(var)
+		def get_{{var.id}}
+			@{{var.id}}
+		end
 	end
-	def get_window_width
-		@window_width
-	end
-	def get_window_height
-		@window_height
-	end
-	def get_window_flags
-		@window_flags
-	end
-	def get_window_title
-		@window_title
-	end
+	func_get :sdl_flags
+	func_get :window_width
+	func_get :window_height
+	func_get :window_flags
+	func_get :window_title
+
+
 	def get_renderer
 		@main_renderer
 	end
@@ -165,7 +88,6 @@ class SDLApp
 		def {{name}}({{arg}})
 		end
 	end
-
 	###########
 	# Stub methods
 	###########
@@ -173,6 +95,7 @@ class SDLApp
 	stub on_init
 	stub on_exit
 	stub on_game_frame,time_step
+	stub __register_signals
 	###########################
 	###########################
 	def on_event(event)
@@ -197,39 +120,15 @@ class SDLApp
 		$main_app = self
 	end
 
-	#Creates a method which register the signals told
-  	macro define_signals(*args)
-  		private def __register_signals
-  			{%for element,index in args%}
-  				{%if index%3 == 0 %}
-  					{%variable = element%}
-  				{%elsif index%3 == 1 %}
-  					{%input = element%}
-  				{%else%}
-  					{%input_action = element%}
-  					add_new_signal(pointerof(@{{variable.id}}),{{input}}, {{input_action}} )
-  				{%end%}
-  			{%end%}
-  		end
-  	end
-  	macro signal(var,input,input_action)
-  		add_new_signal(pointerof({{var}}),{{input}},{{input_action}})
-  	end
-  	def add_new_signal(var, input, input_action)
-  		@__input_hash
-  	end
-	def add_sprite( spr : Sprite , layer = 0)
-		@__draw_table.push(layer,spr)
-	end
 	def run
 		on_init()
-		if self.responds_to?(:__register_signals)
-			__register_signals
-		end
+		__register_signals
+		
+
 		#For maximum correctnes frame time and step time are separated
 		total_time_until_last_step = SDL2.ticks
 
-		#Just so that 
+		
 		time_start_frame = 0
 		sleep_bias = 0_f32
 		
@@ -271,11 +170,9 @@ class SDLApp
 					end
 					total_frame_time = total_frame_time + current_frame_time
 					total_delay = total_delay+actual_delay
-					puts ("Frame:#{current_frame_time},Sleep:#{(1000_f32 / @max_fps) - current_frame_time},Actual delay:#{actual_delay},Bias:#{sleep_bias}")
 					SDL2.delay( actual_delay)
 				else
 					sleep_bias = 0
-					puts ("Frame:#{current_frame_time}")
 				end
 			end
 

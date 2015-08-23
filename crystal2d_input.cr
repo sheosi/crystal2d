@@ -1,4 +1,6 @@
-module Crystal2d_input
+
+module Crystal2d
+
 	alias InputTrigger = SDL2::Scancode | LibSDL2::Key | SDL2::EventType
 		enum InputAction
 		OnOff
@@ -7,6 +9,7 @@ module Crystal2d_input
 		SetAbsolute
 		SetRelative
 	end
+
 	OnOff = InputAction::OnOff
 	Toggle = InputAction::Toggle
 	Bind = InputAction::Bind
@@ -96,6 +99,7 @@ module Crystal2d_input
 			end
 		end
 	end
+
 	class InputHash
 		def initialize()
 			@hash = {} of Array(InputTrigger) => InputReg
@@ -108,6 +112,31 @@ module Crystal2d_input
 			@hash[register.event_registered].push(register)
 		end
 	end
+
 	class SDLApp
-	end
+		#Creates a method which register the signals told
+  		macro signal(var,input,input_action)
+  			add_new_signal(pointerof({{var}}),{{input}},{{input_action}})
+  		end
+
+  		def add_new_signal(var, input, input_action)
+  			@__input_hash
+  		end
+
+		macro define_signals(*args)
+  			private def __register_signals
+  				{%for element,index in args%}
+  					{%if index%3 == 0 %}
+  						{%variable = element%}
+  					{%elsif index%3 == 1 %}
+  						{%input = element%}
+  					{%else%}
+  						{%input_action = element%}
+  						add_new_signal(pointerof(@{{variable.id}}),{{input}}, {{input_action}} )
+  					{%end%}
+  				{%end%}
+  			end
+  		end
+
+	end	
 end
