@@ -1,36 +1,31 @@
 Crystal 2D
 -----------
 
-A small, super-easy-to-use game engine 2D made using Crystal and SDL.
+A small, super-easy-to-use , which has a Rails-like API, 2D game engine made using Crystal and SDL.
 
 Example
 --------
-This renders "test.bmp" and moves it every frame, and closes upon receiving a close or a key press event:
+This renders "char_1_side.png" and moves it if A is pressed, and closes upon receiving a close or a escape key press event:
 ```
 require "sdl2"
 require "./sdlFix"
 require "./crystal2d"
 
-class MyGame < SDLApp
-	def on_init
-		@spr = Sprite.new("test.bmp",@main_renderer)
-	end
-
-	def on_render
-		@spr.render
-	end
-
-	def on_game_frame(timestep)
-		@spr.x =@spr.x + 100*timestep
-	end
+class MyGame < Crystal2d::App
 	
-	def on_event(event)
-		if event.type == SDL2::EventType::QUIT || event.type == SDL2::EventType::KEYDOWN
-			@is_running = false
-		end
+	define_signals :is_running,  LibSDL2::Key::ESCAPE,  Toggle,
+			       :is_running,  SDL2::EventType::QUIT, Toggle,
+	               :should_move, SDL2::Scancode::A,     OnOff
+
+	def on_init
+		@spr = Crystal2d::Sprite.new("char_1_side.png",0)
+	end
+
+	def on_game_frame(timestep)	
+		@spr.x =@spr.x + 100*timestep if @should_move
 	end
 end
 
 MyGame.new.run
 ```
-Note: "sdlFix.cr" is just a patch to the existing SDL2 library
+Note: "sdlFix.cr" is just a (temporary) patch to the existing SDL2 library
