@@ -2,7 +2,7 @@ require "sdl2"
 require "./sdlFix"
 require "./crystal2d"
 
-class MyGame < Crystal2d::SDLApp
+class MyGame < Crystal2d::App
 	
 	define_signals :is_running,  LibSDL2::Key::ESCAPE,  Toggle,
 			       :is_running,  SDL2::EventType::QUIT, Toggle,

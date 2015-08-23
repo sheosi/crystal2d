@@ -1,6 +1,11 @@
 module Crystal2d
+	
+	#A class which hold an image(which is expected to be drawn)
 	class Sprite
+		#is_visible controls whether is draw or not
 		property :is_visible
+
+		#Standard initializing
 		def initialize(path : String,layer = 0, app = $main_app,@is_visible = true )
 			@renderer = app.get_renderer
 			@tex = SDL2::Texture.new(path, @renderer)
@@ -10,6 +15,8 @@ module Crystal2d
 			app.add_sprite self
 		end
 
+		#Initilizing directly through a render, note that is not registered anywhere
+		#   so drawing must be done manually
 		def initialize(path : String,@renderer : SDL2::Renderer | LibSDL2::Renderer)
 			
 			@tex = SDL2::Texture.new(path, @renderer)
@@ -18,11 +25,13 @@ module Crystal2d
 			@y_bias = 0
 		end
 
+		#Render itself into the main
 		def render
 			if @is_visible
 				@renderer.copy(@tex,nil,@size)
 			end
 		end
+		#X and Y coordinates
 		macro coordinate (c)
 			def {{c}}
 				@size.{{c}} + @{{c}}_bias
@@ -45,12 +54,15 @@ module Crystal2d
 		coordinate x
 		coordinate y
 
-	end
-	class SDLApp
+	end #class Sprite
+
+	class App
+
+		#Add sprite to be rendered
 		def add_sprite( spr : Sprite , layer = 0)
 			@__draw_table.push(layer,spr)
 		end
 	end
 
 
-end
+end #module Crystal2d
