@@ -46,13 +46,51 @@ class Table(T)
 	end
 
 end
-class Ola
+macro actions(*actions)
+	#scancode : SDL2::Scancode
+	#keysym : LibSDL2::Key
+   	private def add_actions
+   	  {% for action in actions %}
+       	@actions[{{action}}.to_s] = ->{{action.id}}
+   	  {% end %}
+   	end
 end
-d = Table(Int32).new
-d.push(10,20)
+class Ola
+	#actions :hola
+	@newVar = 0
+	def initialize
+		setVar pointerof(@newVar)
+	end
+	def setVar(var)
+		var.value = 2 
+	end
+	def printVar
 
-b = Array(Ola).new(0) 
+		puts @newVar
+	end	
+	def set_not_a_var
+		@not_a_var = 2000
+	end
+	def testvar
+		pointer = pointerof(@not_a_var)	
+		set_not_a_var
+		puts pointer.value
+	end
+end
 
-b.push(Ola.new)
+Ola.new.testvar
 
 
+macro startWhen(*args)
+	{%tempVar = 0%}
+	puts "case event.type"
+	{%for when_filter,index in args%}	
+		{%if index%2 == 0%}
+			{%value = when_filter%}
+		{%else%}
+			puts "when {{when_filter.id}} @var.value = {{value.id}}"
+		{%end%}
+	{%end%}
+end
+startWhen :gola,"Uhu", 
+		"mwh", lololo

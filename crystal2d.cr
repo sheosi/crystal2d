@@ -12,11 +12,9 @@ def not(bool)
 end
 	 
 module Crystal2d
-	
+#extend self
 
-	extend self
-
-		class Table(T)
+	class Table(T)
 		def initialize()
 			@array = Array.new(1) { Array(T).new(0) }
 		end
@@ -170,35 +168,50 @@ module Crystal2d
     #USEREVENT    = 0x8000
 
     #LASTEVENT    = 0xFFFF
-    #private macro startWhen()
-    	#case event.type
-    #end
-    private macro whenType(eventType,val)
-		when {{eventType}}
-			@var.value = {{val}}
+    private macro whenType(*args)
+    	case event.type
+			{%for when_filter,index in args%}	
+				{%if index%2 == 0%}
+					{%value = when_filter%}
+		    	{%else%}
+			  		when {{when_filter}} 
+			    		@var.value = {{value}}
+				{%end%}
+			{%end%}
+		#end
+	end
+    
+		
 		
 	end
 	class InputReg
-		def initiliaze(@type : InputAction,@var)
+		property :type, :event_registered,:var
+		def initiliaze(@type : InputAction,@event_registered: InputTrigger,@var)
 		end
 
 		def input_action(event)
 			case @type
 			when OnOff
-				case event.type
-				when SDL2::EventType::KEYDOWN
-					@var.value = false
-				when SDL2::EventType::KEYUP
-					@var.value = true
-				when SDL2::EventType::FIRSTEVENT
-					@var.value = true
-				end
+				whenType SDL2::EventType::KEYDOWN , false,
+						 SDL2::EventType::KEYUP	  , true,	 
+					     SDL2::EventType::FIRSTEVENT , true	 
 			end
 		end
 	end
-
-
+	class InputHash
+		def initialize()
+			@hash = {} of Array(InputTrigger) => InputReg
+		end
+		def on_event_received(event)
+			#FIXME:
+			#TODO:
+		end
+		def add_register(register)
+			@hash[register.event_registered].push(register)
+		end
+	end
 class SDLApp
+	alias  InputTrigger = SDL2::Scancode | LibSDL2::Key | SDL2::EventType
 	@limit_fps = true
 	@max_fps = 60
 	@sdl_flags = SDL2::INIT::VIDEO
@@ -262,13 +275,14 @@ class SDLApp
 	###########
 	# Stub methods
 	###########
+	#replace this by if responds_to
 	stub on_init
 	stub on_exit
 	stub on_game_frame,time_step
 	###########################
 	###########################
 	def on_event(event)
-		
+		@__input_hash.on_event_received(event)
 	end
 
 	def on_render
@@ -284,21 +298,40 @@ class SDLApp
 		SDL2::Image.init(get_sdl_image_flags)
 		@main_renderer = SDL2::Renderer.new(get_window,-1,get_renderer_flags)
 		@is_running = true
-		@__input_hash = {} of SDL2::Scancode | LibSDL2::Key | SDL2::EventType => InputReg
+		@__input_hash = {} of Array(InputTrigger) => InputReg
 		@__draw_table = Table(Sprite).new
 		$main_app = self
 	end
-	
-	macro signal(var,scancode, actionType)
-		#scancode : SDL2::Scancode
-		#keysym : LibSDL2::Key
-	end
 
+	#Creates a method which register the signals told
+  	macro define_signals(*args)
+  		private def __register_signals
+  			{%for element,index in args%}
+  				{%if index%3 == 0 %}
+  					{%variable = element%}
+  				{%elsif index%3 == 1 %}
+  					{%input = element%}
+  				{%else%}
+  					{%input_action = element%}
+  					add_new_signal(pointerof(@{{variable.id}}),{{input}}, {{input_action}} )
+  				{%end%}
+  			{%end%}
+  		end
+  	end
+  	macro signal(var,input,input_action)
+  		add_new_signal(pointerof({{var}}),{{input}},{{input_action}})
+  	end
+  	def add_new_signal(var, input, input_action)
+  		@__input_hash
+  	end
 	def add_sprite( spr : Sprite , layer = 0)
 		@__draw_table.push(layer,spr)
 	end
 	def run
-	on_init()
+		on_init()
+		if self.responds_to?(:__register_signals)
+			__register_signals
+		end
 		#For maximum correctnes frame time and step time are separated
 		total_time_until_last_step = SDL2.ticks
 
@@ -366,7 +399,7 @@ class SDLApp
 		SDL2.quit
 	end
 	
-end
+	end
 end
 alias Crystal2D  = Crystal2d
 include Crystal2d
