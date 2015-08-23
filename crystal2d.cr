@@ -13,7 +13,7 @@ end
 	 
 module Crystal2d
 #extend self
-
+	alias InputTrigger = SDL2::Scancode | LibSDL2::Key | SDL2::EventType
 	class Table(T)
 		def initialize()
 			@array = Array.new(1) { Array(T).new(0) }
@@ -298,7 +298,7 @@ class SDLApp
 		SDL2::Image.init(get_sdl_image_flags)
 		@main_renderer = SDL2::Renderer.new(get_window,-1,get_renderer_flags)
 		@is_running = true
-		@__input_hash = {} of Array(InputTrigger) => InputReg
+		@__input_hash = InputHash.new
 		@__draw_table = Table(Sprite).new
 		$main_app = self
 	end
