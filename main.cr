@@ -4,8 +4,8 @@ require "./crystal2d"
 
 class MyGame < Crystal2d::App
 	
-	define_signals :is_running,  LibSDL2::Key::ESCAPE,  Toggle,
-			       :is_running,  SDL2::EventType::QUIT, Toggle,
+	define_signals :is_running,  SDL2::EventType::QUIT,  Toggle,
+			       :is_running,  LibSDL2::Key::ESCAPE, Toggle,
 	               :should_move, SDL2::Scancode::A,     OnOff
 
 	def on_init

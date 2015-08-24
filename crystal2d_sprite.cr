@@ -18,7 +18,6 @@ module Crystal2d
 		#Initilizing directly through a render, note that is not registered anywhere
 		#   so drawing must be done manually
 		def initialize(path : String,@renderer : SDL2::Renderer | LibSDL2::Renderer)
-			
 			@tex = SDL2::Texture.new(path, @renderer)
 			@size = SDL2::Rect.new(0, 0, @tex.w, @tex.h)
 			@x_bias = 0

@@ -97,11 +97,6 @@ module Crystal2d
 		stub on_exit
 		stub on_game_frame,time_step
 		stub __register_signals
-		
-		#Event handling
-		def on_event(event)
-			@__input_hash.on_event_received(event)
-		end
 
 		#Render handling
 		def on_render
@@ -117,7 +112,7 @@ module Crystal2d
 			SDL2::Image.init(get_sdl_image_flags)
 			@main_renderer = SDL2::Renderer.new(get_window,-1,get_renderer_flags)
 			@is_running = true
-			@__input_hash = InputHash.new
+			@__event_hash = EventHash.new
 			@__draw_table = Table(Sprite).new
 			$main_app = self
 		end
@@ -197,7 +192,7 @@ module Crystal2d
 				end #end of fps capping
 				
 				#Just to test
-				if frames < @max_fps
+				if frames < @max_fps *3
 					frames = frames +1
 				else
 					puts ("Time: #{SDL2.ticks-start_render_time}")

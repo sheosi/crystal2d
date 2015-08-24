@@ -31,6 +31,12 @@ module Crystal2d
 
 		end
 
+		def each_line
+			@array.each do |row|
+				yield row
+			end
+		end
+
 		def each
 
 			@array.each do |row|
@@ -39,6 +45,14 @@ module Crystal2d
 				end
 			end
 
+		end
+
+		def size_array()
+			result_array = Array(Int32).new(@array.length)
+			@array.each do |row|
+				result_array.push row.length
+			end
+			result_array
 		end
 	end #class Table
 
