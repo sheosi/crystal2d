@@ -1,19 +1,16 @@
 enum LibSDL2::Key
   def <=>(other)
-    #FIXME:
-    0
+    self.value - other.value
   end
 end
 enum SDL2::EventType
   def <=>(other)
-    #FIXME:
-    0
+    self.value - other.value
   end
 end
 enum SDL2::Scancode
   def <=>(other)
-    #FIXME:
-    0
+    self.value - other.value
   end
 end
 module Crystal2d
@@ -93,41 +90,68 @@ module Crystal2d
 	#Holds the data of the
 	class EventReg
 		property :type, :event_registered,:var
-		def initialize(@type : EventAction,@event_registered: EventTrigger, @var: Pointer(Nil|Bool))      
+		def initialize(@type : EventAction,@event_registered: EventTrigger, @bool_var : Pointer(Nil|Bool))
 		end
+    def initialize(@type : EventAction,@event_registered: EventTrigger, @integer_var : Pointer(Nil|Int))
+    end
     def initialize(@type : EventAction,@event_registered: EventTrigger, &@func: EventHandler)
     end 
 
+
     	#A macro to simplify the writing of the handling of events
-    	private macro whenType(*args)
+    	private macro set_value_false_events(*args)
 	    	case event.type
-				{%for value,index in args%}	
-					{%if index%2 == 0%}
-						{%when_filter = value%}
-		    		{%else%}
-				  		when {{when_filter}} 
-			    			@var.value = {{value}}
-					{%end%}
+				{%for when_filter in args%}	
+				  when {{when_filter}} 
+			    	@bool_var.value = false
 				{%end%}
+        else
+          @bool_var.value = true
 			end
 		end
-    
-		
-		#Where the events are handled and the desired action is done
+
+    #MOUSEMOTION    = 0x400
+    #MOUSEBUTTONDOWN
+    #MOUSEBUTTONUP
+    #MOUSEWHEEL
+#
+    #JOYAXISMOTION  = 0x600
+    #JOYBALLMOTION
+    #JOYHATMOTION
+    #JOYBUTTONDOWN
+    #JOYBUTTONUP
+#
+    #CONTROLLERAXISMOTION  = 0x650
+    #CONTROLLERBUTTONDOWN
+    #CONTROLLERBUTTONUP
+#
+    #FINGERMOTION
+
+    #Where the events are handled and the desired action is done
 		def event_action(event)
 			case @type
 			when OnOff
-        @var.value.try do 
-				  whenType  SDL2::EventType::KEYDOWN , true,
-						        SDL2::EventType::KEYUP	  , false,	 
-					          SDL2::EventType::FIRSTEVENT , true
+        @bool_var.value.try do 
+				  set_value_false_events  SDL2::EventType::KEYUP, SDL2::EventType::MOUSEBUTTONUP, SDL2::EventType::JOYBUTTONUP, SDL2::EventType::CONTROLLERBUTTONUP
         end
       when Toggle
-        not @var.value
+        not @bool_var.value
       when Bind
         @func.try do 
           @func.call(event)
         end
+      when SetAbsolute
+        case event.type
+        when SDL2::EventType::KEYUP
+          if @integer_var.is_a?(Int)
+            @integer_var.value = 0
+          end
+        when SDL2::EventType::KEYDOWN
+          @integer_var.value = 1
+        when SDL2::EventType::MOUSEBUTTONUP
+        end     
+      when SetRelative
+
 			end
 		end
 
@@ -177,9 +201,13 @@ module Crystal2d
     end
 		#Creates a method which register the signals told
   	macro signal(var,input,event_action)
-      {%if event_action.id == "OnOff".id || event_action== "Toggle".id%}
+      {%if event_action.id == "OnOff".id || event_action== "Toggle".id || event_action == OnOff || event_action == Toggle%}
         if @{{variable.id}} == nil
           @{{variable.id}} = false
+        end
+      {%elsif event_action.id == "SetRelative".id || event_action== "SetAbsolute".id ||event_action.id== SetRelative || event_action.id == SetAbsolute%}
+        if @{{variable.id}} == nil
+          @{{variable.id}} = 0
         end
       {%end%}
   		add_new_signal(pointerof({{var}}),{{input}},{{event_action}})

@@ -8,7 +8,7 @@ class MyGame < Crystal2d::App
 			       :is_running,  LibSDL2::Key::ESCAPE, Toggle,
 	               :should_move, SDL2::Scancode::A,     OnOff
 
-	def on_init
+	def on_init	
 		@spr = Crystal2d::Sprite.new("char_1_side.png",0)
 	end
 
