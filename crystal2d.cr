@@ -32,9 +32,14 @@ module Crystal2d
 		#Window config
 		@window_flags = SDL2::Window::Flags::SHOWN
 		@window_title = "An SDL2 application"
-		@window_width = 640
-		@window_height = 480
-		
+		@window_width = 800
+		@window_height = 600
+
+		#Logical window (for resolution independent)
+		@resolution_independent = true
+		@logical_width = 800
+		@logical_height = 600
+
 		#Video config
 		@v_sync = true
 		@limit_fps = true
@@ -59,6 +64,8 @@ module Crystal2d
 		func_get :window_height
 		func_get :window_flags
 		func_get :window_title
+		func_get :logical_width
+		func_get :logical_height
 	
 	
 		def get_renderer
@@ -111,6 +118,12 @@ module Crystal2d
 			@main_window = SDL2::Window.new(get_window_title, get_window_width,get_window_height,get_window_flags)
 			SDL2::Image.init(get_sdl_image_flags)
 			@main_renderer = SDL2::Renderer.new(get_window,-1,get_renderer_flags)
+
+			if @resolution_independent
+				LibSDL2.set_hint("SDL_RENDER_SCALE_QUALITY", "linear")
+				LibSDL2.render_set_logical_size(@main_renderer,get_logical_width,get_logical_height)
+			end
+
 			@is_running = true
 			@__event_hash = EventHash.new
 			@__draw_table = Table(Sprite).new
@@ -216,4 +229,4 @@ end #module Crystal2d
 #    and it doesn't matter anyway
 alias Crystal2D  = Crystal2d
 #For many methods it's ugly to write Crystal2d::
-include Crystal2d
+include Crystal2D

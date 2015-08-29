@@ -88,7 +88,6 @@ class SDL2::Renderer
 	end
 end
 
-
 class SDL2::Surface
 	def finalize
 		self.free
@@ -105,4 +104,7 @@ lib LibSDL2
     	patch : UInt8        #< update version
 	end
 	fun query_texture = SDL_QueryTexture(texture : LibSDL2::Texture*, format : UInt32*, access : Int32*, w : Int32*, h : Int32*)
-end	
+	fun render_set_logical_size = SDL_RenderSetLogicalSize(renderer : LibSDL2::Renderer*, w : Int32, h : Int32) : Int32
+	fun set_hint = SDL_SetHint(name : UInt8*, value : UInt8*) : Bool
+end
+ 
