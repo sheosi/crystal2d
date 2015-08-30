@@ -89,7 +89,24 @@ module Crystal2d
 			result = result | SDL2::Image::Init_flags::WEBP if @use_webp		
 			result
 		end
-		
+
+		#The window width which should be used (can be either the real one or the logical one)
+		def usable_win_width
+			if @resolution_independent
+				@logical_width
+			else
+				@window_width
+			end
+		end
+
+		def usable_win_height
+			if @resolution_independent
+				@logical_height
+			else
+				@window_height
+			end
+		end
+
 		macro stub(name)
 			def {{name}}
 			end
@@ -212,7 +229,8 @@ module Crystal2d
 					puts ("Sleep bias: #{sleep_bias}")
 					puts ("Total delay: #{total_delay}")
 					puts ("Total frame time: #{total_frame_time}")
-					@is_running = false
+					frames = 1
+					#@is_running = false
 				end #end of testing
 			end
 

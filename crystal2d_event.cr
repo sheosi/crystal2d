@@ -98,7 +98,7 @@ module Crystal2d
     end 
 
 
-    	#A macro to simplify the writing of the handling of events
+    	#A macro to simplify writing the handling of events
     	private macro set_value_false_events(*args)
 	    	case event.type
 				{%for when_filter in args%}	
@@ -135,7 +135,7 @@ module Crystal2d
 				  set_value_false_events  SDL2::EventType::KEYUP, SDL2::EventType::MOUSEBUTTONUP, SDL2::EventType::JOYBUTTONUP, SDL2::EventType::CONTROLLERBUTTONUP
         end
       when Toggle
-        not @bool_var.value
+        @bool_var.value = not @bool_var.value
       when Bind
         @func.try do 
           @func.call(event)
